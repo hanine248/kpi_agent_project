@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Performance Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #e9ecef;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #e9ecef;
+        }
+
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4facfe;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .result-card h3 {
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .prediction-score {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4facfe;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-info {
+            background: #cce7ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HR Performance Predictor</h1>
+            <p>Predict employee performance scores using machine learning</p>
+        </div>
+
+        <div class="content">
+            <div class="form-section">
+                <h2 style="margin-bottom: 25px; color: #495057;">Employee Information</h2>
+                
+                <form id="predictionForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="department">Department</label>
+                            <select id="department" name="Department" required>
+                                <option value="">Select Department</option>
+                                <option value="IT">IT</option>
+                                <option value="HR">HR</option>
+                                <option value="Sales">Sales</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Operations">Operations</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select id="gender" name="Gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="age">Age</label>
+                            <input type="number" id="age" name="Age" min="18" max="70" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="yearsAtCompany">Years at Company</label>
+                            <input type="number" id="yearsAtCompany" name="Years_At_Company" min="0" max="50" step="0.1" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jobTitle">Job Title</label>
+                        <input type="text" id="jobTitle" name="Job_Title" placeholder="e.g., Developer, Manager, Analyst" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hireDate">Hire Date</label>
+                        <input type="date" id="hireDate" name="Hire_Date" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="educationLevel">Education Level</label>
+                            <select id="educationLevel" name="Education_Level" required>
+                                <option value="">Select Education</option>
+                                <option value="High School">High School</option>
+                                <option value="Bachelor">Bachelor</option>
+                                <option value="Master">Master</option>
+                                <option value="PhD">PhD</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="monthlySalary">Monthly Salary ($)</label>
+                            <input type="number" id="monthlySalary" name="Monthly_Salary" min="1000" max="50000" step="100" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="workHours">Work Hours Per Week</label>
+                            <input type="number" id="workHours" name="Work_Hours_Per_Week" min="20" max="80" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="projectsHandled">Projects Handled</label>
+                            <input type="number" id="projectsHandled" name="Projects_Handled" min="0" max="100" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="overtimeHours">Overtime Hours</label>
+                            <input type="number" id="overtimeHours" name="Overtime_Hours" min="0" max="40" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="sickDays">Sick Days</label>
+                            <input type="number" id="sickDays" name="Sick_Days" min="0" max="30" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="remoteWork">Remote Work Frequency (%)</label>
+                            <input type="number" id="remoteWork" name="Remote_Work_Frequency" min="0" max="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="teamSize">Team Size</label>
+                            <input type="number" id="teamSize" name="Team_Size" min="1" max="50" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="trainingHours">Training Hours</label>
+                            <input type="number" id="trainingHours" name="Training_Hours" min="0" max="200" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="promotions">Promotions</label>
+                            <input type="number" id="promotions" name="Promotions" min="0" max="10" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="resigned">Resigned</label>
+                        <select id="resigned" name="Resigned" required>
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary" onclick="trainModel()">Train Model</button>
+                        <button type="submit" class="btn btn-primary">Predict Performance</button>
+                        <button type="button" class="btn btn-success" onclick="getFeatures()">Get Features</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="results-section">
+                <h2 style="margin-bottom: 25px; color: #495057;">Results</h2>
+                
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Processing your request...</p>
+                </div>
+
+                <div id="statusMessage"></div>
+
+                <div id="predictionResult" class="result-card" style="display: none;">
+                    <h3>Performance Score Prediction</h3>
+                    <div class="prediction-score" id="scoreValue">--</div>
+                    <p style="text-align: center; color: #6c757d;">Predicted Performance Score (0-100)</p>
+                </div>
+
+                <div id="featuresResult" class="result-card" style="display: none;">
+                    <h3>Model Features</h3>
+                    <div id="featuresList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+
+        // Show loading state
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        // Hide loading state
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Show status message
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
+        }
+
+        // Train model
+        async function trainModel() {
+            showLoading();
+            showStatus('Training model... This may take a few moments.', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/train`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showStatus('Model trained successfully! You can now make predictions.', 'success');
+                } else {
+                    showStatus(`Training failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}. Make sure your Flask server is running on localhost:5000.`, 'error');
+            }
+            
+            hideLoading();
+        }
+
+        // Get model features
+        async function getFeatures() {
+            showLoading();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/features`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const featuresDiv = document.getElementById('featuresResult');
+                    const featuresList = document.getElementById('featuresList');
+                    
+                    if (Array.isArray(data.expected_features)) {
+                        featuresList.innerHTML = '<ul>' + 
+                            data.expected_features.map(feature => `<li>${feature}</li>`).join('') + 
+                            '</ul>';
+                    } else {
+                        featuresList.innerHTML = `<p>${data.expected_features}</p>`;
+                    }
+                    
+                    featuresDiv.style.display = 'block';
+                    showStatus('Features loaded successfully!', 'success');
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}. Make sure your Flask server is running.`, 'error');
+            }
+            
+            hideLoading();
+        }
+
+        // Handle form submission
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            showLoading();
+            showStatus('Making prediction...', 'info');
+            
+            // Collect form data
+            const formData = new FormData(this);
+            const data = {};
+            
+            for (let [key, value] of formData.entries()) {
+                // Convert numeric fields
+                if (['Age', 'Years_At_Company', 'Monthly_Salary', 'Work_Hours_Per_Week', 
+                     'Projects_Handled', 'Overtime_Hours', 'Sick_Days', 'Remote_Work_Frequency',
+                     'Team_Size', 'Training_Hours', 'Promotions'].includes(key)) {
+                    data[key] = parseFloat(value);
+                } else if (key === 'Resigned') {
+                    data[key] = value === 'true';
+                } else {
+                    data[key] = value;
+                }
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/predict`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Show prediction result
+                    document.getElementById('scoreValue').textContent = result.predicted_score.toFixed(2);
+                    document.getElementById('predictionResult').style.display = 'block';
+                    showStatus('Prediction completed successfully!', 'success');
+                } else {
+                    showStatus(`Prediction failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}. Make sure your Flask server is running on localhost:5000.`, 'error');
+            }
+            
+            hideLoading();
+        });
+
+        // Set default hire date to 2 years ago
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const twoYearsAgo = new Date(today.getFullYear() - 2, today.getMonth(), today.getDate());
+            document.getElementById('hireDate').value = twoYearsAgo.toISOString().split('T')[0];
+        });
+    </script>
+</body>
+</html>
