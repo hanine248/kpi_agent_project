@@ -19,7 +19,24 @@
   </style>
 </head>
 <body>
-  <div class="container">
+
+  <!-- Login Form -->
+  <div id="loginSection" class="container">
+    <h2 class="text-center mb-4">HR Login</h2>
+    <form id="loginForm" class="mb-4">
+      <div class="mb-3">
+        <input type="text" id="username" class="form-control" placeholder="Username" required>
+      </div>
+      <div class="mb-3">
+        <input type="password" id="password" class="form-control" placeholder="Password" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Login</button>
+    </form>
+    <div id="loginError" class="text-danger text-center"></div>
+  </div>
+
+  <!-- Dashboard (hidden by default) -->
+  <div id="dashboardSection" class="container" style="display:none;">
     <h2 class="text-center mb-4">HR Performance Dashboard</h2>
 
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -44,6 +61,28 @@
 
   <script>
     let employees = [];
+
+    // Handle login
+    document.getElementById('loginForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      const res = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+      if (data.status === "success") {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("dashboardSection").style.display = "block";
+        fetchEmployees();
+      } else {
+        document.getElementById("loginError").textContent = data.message;
+      }
+    };
 
     async function fetchEmployees() {
       const res = await fetch('/employees');
@@ -98,11 +137,10 @@
           employees[index].predicted_score = score;
         }
 
-        // Color logic
         let bgColor = '#eef1f5';
-        if (score >= 4) bgColor = '#d4edda';       // green
-        else if (score >= 2) bgColor = '#fff3cd';   // yellow
-        else bgColor = '#f8d7da';                   // red
+        if (score >= 4) bgColor = '#d4edda'; // green
+        else if (score > 2) bgColor = '#fff3cd'; // yellow
+        else bgColor = '#f8d7da'; // red
 
         resultDiv.innerHTML = `
           <div class="result-box" style="background-color: ${bgColor};">
@@ -120,7 +158,7 @@
       }
     }
 
-    // Search filter by ID, name, or department
+    // Search filter
     document.getElementById('searchInput').addEventListener('input', (e) => {
       const term = e.target.value.toLowerCase();
       const filtered = employees.filter(emp =>
@@ -131,16 +169,12 @@
       renderTable(filtered);
     });
 
-    // Sort by predicted score
     function sortByScore() {
       const scored = employees.filter(emp => emp.predicted_score !== undefined);
       const unscored = employees.filter(emp => emp.predicted_score === undefined);
-
-      scored.sort((a, b) => b.predicted_score - a.predicted_score); // descending
+      scored.sort((a, b) => b.predicted_score - a.predicted_score);
       renderTable([...scored, ...unscored]);
     }
-
-    document.addEventListener('DOMContentLoaded', fetchEmployees);
   </script>
 </body>
 </html>

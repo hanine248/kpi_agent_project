@@ -3,9 +3,8 @@ import os
 
 print("🔄 Starting TinyLlama test...")
 
-# Path to the downloaded TinyLlama model
-model_path = "C:/Users/pc/Downloads/tinyllama-1.1b-chat-v1.1.Q4_K_M.gguf"
-
+model_path = "C:/path/to/mistral-7b-instruct-v0.2.Q4_K_M.gguf"
+llm = Llama(model_path=model_path, n_ctx=1024)  # Increase context for better output
 
 
 # Load the model

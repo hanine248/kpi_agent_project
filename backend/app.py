@@ -1,21 +1,19 @@
 import sys
 import os
+import hashlib
 from pathlib import Path
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session
 from flask_cors import CORS
+from database import get_connection, get_all_employees, get_employee_by_id
+from ml_model import PerformancePredictor
+from rule_engine import apply_rules
 
 # Ensure backend folder is in sys.path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from ml_model import PerformancePredictor
-from rule_engine import apply_rules
-
-
-
-from database import get_all_employees, get_employee_by_id
-
 # Flask app setup
 app = Flask(__name__, template_folder='../templates')
+app.secret_key = 'your-very-secret-key'
 CORS(app)
 
 # Paths
@@ -26,7 +24,8 @@ model_path = script_dir / 'model' / 'performance_predictor.joblib'
 # ML predictor
 predictor = PerformancePredictor()
 
-# Routes
+# === ROUTES ===
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -34,6 +33,28 @@ def home():
 @app.route('/api')
 def api_info():
     return "HR Performance Prediction API (Simplified Version)"
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT password_hash FROM HR_Users WHERE username = ?", (username,))
+    row = cursor.fetchone()
+
+    if row:
+        stored_hash = row[0]
+        input_hash = hashlib.sha256(password.encode()).hexdigest()
+
+        if input_hash == stored_hash:
+            session["user"] = username
+            return jsonify({"status": "success", "message": "Login successful"})
+
+    return jsonify({"status": "error", "message": "Invalid credentials"}), 401
+
 
 @app.route('/employees', methods=['GET'])
 def list_employees():
@@ -73,11 +94,14 @@ def predict():
         result = predictor.predict(data)
 
         return jsonify({
-            "status": "success",
-            "predicted_score": result["score"],
-            "rule_explanations": result["rule_based_reasons"],
-            "gpt_explanation": result["gpt_explanation"]
-        })
+    "status": "success",
+    "predicted_score": result["score"],
+    "rule_explanations": result["rule_based_reasons"],
+    "gpt_explanation": result["gpt_explanation"],
+    "random_forest_score": result["random_forest_score"]  # ✅ fixed
+})
+
+
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 

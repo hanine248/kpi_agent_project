@@ -1,29 +1,27 @@
 from llama_cpp import Llama
 import os
 import re
-
-model_path = "C:/Users/pc/Downloads/tinyllama-1.1b-chat-v1.1.Q4_K_M.gguf"
+model_path = "C:/Users/pc/Downloads/mistral-7b-instruct-v0.2.Q4_K_M.gguf"
 llm = Llama(model_path=model_path, n_ctx=512)
-
 def explain_performance_with_gpt(employee_profile: dict) -> tuple:
     # Prompt with strict format instructions
     prompt = (
-    "You are an expert HR analyst AI. Based on the employee profile below, "
-    "rate their performance on a scale of 0 to 5 and explain briefly why.\n"
-    "- Give a short and realistic explanation.\n"
-    "- Be objective. Do not just say 'poor performance', explain why.\n"
-    "- If performance is weak, mention specific points like lack of experience, low satisfaction, or missed deadlines.\n"
-    "- Format strictly:\n"
-    "Score: <number>\n"
-    "Explanation: <brief explanation>\n\n"
-)
+        "You are an expert HR analyst AI. Based on the employee profile below, "
+        "rate their performance on a scale of 0 to 5 and explain briefly why.\n"
+        "- Give a short and realistic explanation.\n"
+        "- Be objective. Do not just say 'poor performance', explain why.\n"
+        "- If performance is weak, mention specific points like lack of experience, low satisfaction, or missed deadlines.\n"
+        "- Format strictly:\n"
+        "Score: <number>\n"
+        "Explanation: <brief explanation>\n\n"
+    )
 
     for key, value in employee_profile.items():
         prompt += f"{key.replace('_', ' ')}: {value}\n"
     prompt += "\nNow respond:\n"
 
     try:
-        output = llm(prompt, max_tokens=150, echo=False)
+        output = llm(prompt, max_tokens=200, echo=False)
         text = output["choices"][0]["text"].strip()
 
         # Extract score and explanation

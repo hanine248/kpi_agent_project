@@ -1,0 +1,8 @@
+flask
+jinja2
+pandas
+scikit-learn
+joblib
+transformers
+torch
+sentencepiece

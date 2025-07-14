@@ -49,10 +49,19 @@ class PerformancePredictor:
         X = self.df[self.features]
         y = self.df[self.target]
 
-        # Preprocessing
-        numeric_features = X.select_dtypes(include=['int64', 'float64']).columns
-        categorical_features = X.select_dtypes(include=['object', 'bool']).columns
+        # Manually specify numeric and categorical features
+        numeric_features = [
+            'Years_At_Company', 'Monthly_Salary', 'Overtime_Hours',
+            'Training_Hours', 'Promotions', 'Age', 'Projects_Handled',
+            'Team_Size', 'Sick_Days', 'Work_Hours_Per_Week'
+        ]
 
+        categorical_features = [
+            'Job_Title', 'Department', 'Gender', 'Education_Level',
+            'Remote_Work_Frequency', 'Resigned'
+        ]
+
+        # Define preprocessing pipelines
         numeric_transformer = Pipeline(steps=[
             ('imputer', SimpleImputer(strategy='median')),
             ('scaler', StandardScaler())
@@ -77,22 +86,42 @@ class PerformancePredictor:
         joblib.dump(self.model, self.model_path)
 
     def predict(self, input_data):
+        print("📢 predict() function called")
+
         if not self.model:
             if os.path.exists(self.model_path):
                 self.model = joblib.load(self.model_path)
+                print("📦 Model loaded successfully.")
             else:
-                raise Exception("Model not trained. Please train it first.")
+                raise Exception("❌ Model not trained. Please train it first.")
 
+        # Rule-based logic
         rule_explanations, adjustment = apply_rules(input_data)
 
+        # ML prediction
         input_df = pd.DataFrame([input_data])
-        raw_score = float(self.model.predict(input_df)[0])
-        adjusted_score = max(0, min(5, raw_score + adjustment))
+        print("🧾 Input DataFrame for prediction:")
+        print(input_df)
 
+        try:
+            # Optional: Show model input features if needed
+            # print("✅ Model expects:", self.model.named_steps['preprocessor'].get_feature_names_out())
+            raw_score = float(self.model.predict(input_df)[0])
+            print("⚙️ Raw score from model:", raw_score)
+        except Exception as e:
+            print("❌ Model prediction error:", e)
+            raise  # Raise the error to see the root cause
+            raw_score = None
+
+        adjusted_score = max(0, min(5, raw_score + adjustment)) if raw_score is not None else 0
+        print("🧪 Final adjusted score:", adjusted_score)
+
+        # GPT explanation
         gpt_score, gpt_explanation = explain_performance_with_gpt(input_data)
 
         return {
             "score": round(gpt_score if gpt_score is not None else adjusted_score, 2),
+            "random_forest_score": round(raw_score, 2) if raw_score is not None else None,
             "rule_based_reasons": rule_explanations,
             "gpt_explanation": gpt_explanation
         }
